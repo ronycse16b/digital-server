@@ -23,11 +23,6 @@ const wardGetDataController = async (req, res) => {
 // create ward data
 const wardDataMakeController = async (req, res) => {
   try {
-    const { birthRegNumber, nidNumber } = req.body;
-
-    if (!birthRegNumber && !nidNumber) {
-      return res.send("Either Birth Reg Number or Nid Number must be provided");
-    }
 
     const newData = req.body;
 
@@ -378,7 +373,7 @@ const updateController = async (req, res) => {
 const updateQrController = async (req, res) => {
   try {
     const {generatedQR } = req.body;
-    console.log(generatedQR);
+    
     const qrUpdate = await TaxModel.findByIdAndUpdate(
       req.params.id,
       {qr: generatedQR},

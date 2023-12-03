@@ -12,8 +12,8 @@ router.get('/signout', signOut)
 
 router.get('/users',  allUsersGetController)
 router.get('/user/:id',singleUserGetController)
-router.put('/user-update-role/:id',userRoleUpdateController)
-router.delete('/user-delete/:id',deleteUserController)
+router.put('/user-update-role/:id',IsAuthenticUser,userRoleUpdateController)
+router.delete('/user-delete/:id',IsAuthenticUser,deleteUserController)
 
 //protected User route auth
 router.get("/user-auth/:id", IsAuthenticUser, (req, res) => {
