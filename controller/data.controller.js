@@ -1,4 +1,3 @@
-
 const TaxModel = require("../models/tax.register.model");
 const villageModel = require("../models/village.model");
 const WardDataModel = require("../models/ward.data.model");
@@ -23,7 +22,6 @@ const wardGetDataController = async (req, res) => {
 // create ward data
 const wardDataMakeController = async (req, res) => {
   try {
-
     const newData = req.body;
 
     const wardDataInstance = new WardDataModel(newData);
@@ -32,7 +30,7 @@ const wardDataMakeController = async (req, res) => {
     res.status(201).json({ message: "Data Created Successfully", savedData });
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ error: "Data making error",error:error.message });
+    res.status(500).json({ error: "Data making error", error: error.message });
   }
 };
 
@@ -62,7 +60,7 @@ const wardWaysDataController = async (req, res) => {
 const getDataController = async (req, res) => {
   try {
     const id = req.params.id;
-   
+
     const page = parseInt(req.query.page) || 1;
     const perPage = parseInt(req.query.perPage) || 20;
 
@@ -99,12 +97,29 @@ const allWardsDataController = async (req, res) => {
 
     const countTotal = await WardDataModel.countDocuments({});
     const totalPages = Math.ceil(countTotal / perPage);
-    const skip = (page - 1) * perPage;
 
+    // Fetch more data than needed to ensure all wards are included
     const data = await WardDataModel.find({})
-      .skip(skip)
-      .limit(perPage)
-      .populate("ward");
+      .populate("ward")
+      .sort({ "ward.number": 1 });
+
+    // Group the data by ward
+    const groupedData = data.reduce((result, item) => {
+      const wardNumber = item.ward.number;
+      result[wardNumber] = result[wardNumber] || [];
+      result[wardNumber].push(item);
+      return result;
+    }, {});
+
+    // Paginate while ensuring all items for a ward are included
+    const paginatedData = [];
+    for (const wardNumber in groupedData) {
+      paginatedData.push(...groupedData[wardNumber]);
+    }
+
+    const startIdx = (page - 1) * perPage;
+    const endIdx = startIdx + perPage;
+    const slicedData = paginatedData.slice(startIdx, endIdx);
 
     res.status(200).json({
       success: true,
@@ -112,6 +127,26 @@ const allWardsDataController = async (req, res) => {
       totalPages,
       currentPage: page,
       perPage,
+      message: "Data fetched successfully",
+      data: slicedData,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Error in getting data",
+      error: error.message,
+    });
+  }
+};
+
+const allDataCalculateController = async (req, res) => {
+  try {
+    const ward = req.params.id;
+    const data = await WardDataModel.find({ ward: ward }).populate("ward");
+    res.status(200).json({
+      success: true,
       message: "Data fetched successfully",
       data,
     });
@@ -125,7 +160,24 @@ const allWardsDataController = async (req, res) => {
     });
   }
 };
+const allCalculateController = async (req, res) => {
+  try {
+    const data = await WardDataModel.find({}).populate("ward");
+    res.status(200).json({
+      success: true,
+      message: "Data fetched successfully",
+      data,
+    });
+  } catch (error) {
+    console.error(error); // Log the error for debugging purposes
 
+    res.status(500).json({
+      success: false,
+      message: "Error in getting data",
+      error: error.message, // Include the error message in the response
+    });
+  }
+};
 
 const fullDataController = async (req, res) => {
   try {
@@ -162,23 +214,19 @@ const searchDataController = async (req, res) => {
       holding: searchValue,
     }).populate("ward"); // Assuming there's a reference to another model named 'ward'
 
-    if(data){
+    if (data) {
       res.json({
-        success:true,
-        message : 'get data',
-        
-        data});
-    }else{
+        success: true,
+        message: "get data",
+
+        data,
+      });
+    } else {
       res.send({
-        success:false,
-        message:'data not found'
-      })
+        success: false,
+        message: "data not found",
+      });
     }
-
-
-
-
-    
   } catch (error) {
     console.error(error);
     res
@@ -187,18 +235,16 @@ const searchDataController = async (req, res) => {
   }
 };
 
-
 const searchAllDataController = async (req, res) => {
   try {
     const { wardWaysData, searchValue } = req.query;
 
     // Check if searchValue is a number
-    
+
     const data = await WardDataModel.find({
       ward: wardWaysData,
       holding: searchValue,
     }).populate("ward"); // Assuming there's a reference to another model named 'ward'
-
 
     res.json(data);
   } catch (error) {
@@ -211,41 +257,25 @@ const searchAllDataController = async (req, res) => {
 
 const TaxRegisterSearchController = async (req, res) => {
   try {
-    const { searchValue } = req.query;
+    const { wardWaysData, searchValue } = req.query;
 
-    if (!searchValue) {
-      return res.status(400).json({ error: "Search value is required." });
-    }
+    // Ensure that holding is an integer
 
-    const isNumber = !isNaN(searchValue);
 
-    let query;
-
-    if (isNumber) {
-      // Search for an exact match in the "sn" field if the search value is a number
-      query = { sn: searchValue };
-    } else {
-      // Search for Bangla words in specific fields (name, fatherName, motherName)
-      const banglaRegex = new RegExp(searchValue, 'i');
-      query = {
-        $or: [
-          { name: { $regex: banglaRegex } },
-          { fatherName: { $regex: banglaRegex } },
-          { motherName: { $regex: banglaRegex } },
-        ],
-      };
-    }
-
-    const data = await TaxModel.find(query).populate('ward');
+    // Use the correct structure for the find query
+    const data = await TaxModel.find({
+      ward: wardWaysData,
+      holding: searchValue,
+    }).populate("ward"); // Assuming there's a reference to another model named 'ward'
 
     res.json(data);
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ error: "Error searching for data", details: error.message });
+    res.status(500).json({ error: "Error searching for data", details: error.message });
   }
 };
+
+
 const AllDataSearchController = async (req, res) => {
   try {
     const { searchValue } = req.query;
@@ -260,14 +290,14 @@ const AllDataSearchController = async (req, res) => {
 
     if (isNumber) {
       // Search for an exact match in the "sn" field if the search value is a number
-      query = { holding: searchValue,
+      query = {
+        holding: searchValue,
         nidNumber: searchValue,
         mobile: searchValue,
-      
       };
     } else {
       // Search for Bangla words in specific fields (name, fatherName, motherName)
-      const banglaRegex = new RegExp(searchValue, 'i');
+      const banglaRegex = new RegExp(searchValue, "i");
       query = {
         $or: [
           { name: { $regex: banglaRegex } },
@@ -277,7 +307,7 @@ const AllDataSearchController = async (req, res) => {
       };
     }
 
-    const data = await WardDataModel.find(query).populate('ward');
+    const data = await WardDataModel.find(query).populate("ward");
 
     res.json(data);
   } catch (error) {
@@ -288,12 +318,9 @@ const AllDataSearchController = async (req, res) => {
   }
 };
 
-
-
 const taxPaymentController = async (req, res) => {
   try {
-    const { year, paymentId, cor, due } = req.body;
-    
+    const { year, paymentId, cor, due, total } = req.body;
 
     const taxPayment = await TaxModel(req.body).save();
 
@@ -302,13 +329,11 @@ const taxPaymentController = async (req, res) => {
       const wardData = await WardDataModel.findOne({ _id: paymentId });
 
       if (wardData) {
-
-        wardData.due =due
+        wardData.due = due;
 
         wardData.checkbox.push({
           year,
-          due
-
+          total,
         });
 
         await wardData.save();
@@ -332,7 +357,6 @@ const taxPaymentController = async (req, res) => {
     });
   }
 };
-
 
 const DataViewControllerByQRCode = async (req, res) => {
   try {
@@ -372,11 +396,11 @@ const updateController = async (req, res) => {
 };
 const updateQrController = async (req, res) => {
   try {
-    const {generatedQR } = req.body;
-    
+    const { generatedQR } = req.body;
+
     const qrUpdate = await TaxModel.findByIdAndUpdate(
       req.params.id,
-      {qr: generatedQR},
+      { qr: generatedQR },
       { new: true }
     );
 
@@ -436,7 +460,7 @@ const paymentViewControllerByQRCode = async (req, res) => {
 
 const TaxRegisterGetDataController = async (req, res) => {
   try {
-    const taxRegister = await TaxModel.find({});
+    const taxRegister = await TaxModel.find({}).sort({ createdAt: -1 });
     if (taxRegister) {
       res.status(200).send({ message: "tax Register Data ", taxRegister });
     }
@@ -447,17 +471,14 @@ const TaxRegisterGetDataController = async (req, res) => {
 
 const villageDataController = async (req, res) => {
   try {
-    const village = await villageModel.find({ward_no: req.params.id});
+    const village = await villageModel.find({ ward_no: req.params.id });
     if (village) {
-      res.status(200).send({ message:"Data ", village });
+      res.status(200).send({ message: "Data ", village });
     }
   } catch (error) {
     console.log(error.message);
   }
 };
-
-
-
 
 const ReportDataController = async (req, res) => {
   try {
@@ -470,13 +491,10 @@ const ReportDataController = async (req, res) => {
     // Set the end date to the end of the day
     end.setHours(23, 59, 59, 999);
 
-
     // Assuming 'year' is an array in your schema
     const data = await TaxModel.find({
       createdAt: { $gte: start, $lte: end },
     }).populate("ward");
-
-    
 
     res.json({ data });
   } catch (error) {
@@ -487,8 +505,6 @@ const ReportDataController = async (req, res) => {
     });
   }
 };
-
-
 
 module.exports = {
   wardGetDataController,
@@ -505,5 +521,12 @@ module.exports = {
   updateController,
   deleteDataController,
   AllDataSearchController,
-  searchAllDataController,allWardsDataController,ReportDataController,villageDataController,updateQrController,TaxRegisterSearchController
+  searchAllDataController,
+  allWardsDataController,
+  ReportDataController,
+  villageDataController,
+  updateQrController,
+  TaxRegisterSearchController,
+  allDataCalculateController,
+  allCalculateController,
 };

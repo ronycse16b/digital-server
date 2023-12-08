@@ -1,6 +1,6 @@
 const express = require("express");
 
-const { wardGetDataController, wardDataMakeController,TaxRegisterGetDataController, wardWaysDataController, getDataController, searchDataController,taxPaymentController, DataViewControllerByQRCode,paymentViewControllerByQRCode,fullDataController,SingleData,updateController ,deleteDataController,allWardsDataController,searchAllDataController,ReportDataController,villageDataController,updateQrController,TaxRegisterSearchController,AllDataSearchController} = require("../controller/data.controller");
+const { wardGetDataController, wardDataMakeController,TaxRegisterGetDataController, wardWaysDataController, getDataController, searchDataController,taxPaymentController, DataViewControllerByQRCode,paymentViewControllerByQRCode,fullDataController,SingleData,updateController ,deleteDataController,allWardsDataController,searchAllDataController,ReportDataController,villageDataController,updateQrController,TaxRegisterSearchController,allCalculateController,allDataCalculateController,AllDataSearchController} = require("../controller/data.controller");
 const {IsAuthenticUser, isAdmin} = require("../hook/middelware");
 
 
@@ -25,6 +25,9 @@ router.delete("/delete/:id",IsAuthenticUser,deleteDataController);
 router.get("/single-data/:id",SingleData);
 router.get("/all-search",searchAllDataController);
 router.get("/all-ward-data",allWardsDataController);
+router.get("/all-ward-data",allWardsDataController);
+router.get("/all-data-calculate/:id",allDataCalculateController);
+router.get("/all-data-calculate",allCalculateController);
 router.get("/filter",ReportDataController);
 router.get("/village/:id",villageDataController);
 
