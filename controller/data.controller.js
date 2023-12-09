@@ -261,7 +261,6 @@ const TaxRegisterSearchController = async (req, res) => {
 
     // Ensure that holding is an integer
 
-
     // Use the correct structure for the find query
     const data = await TaxModel.find({
       ward: wardWaysData,
@@ -271,10 +270,11 @@ const TaxRegisterSearchController = async (req, res) => {
     res.json(data);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error searching for data", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Error searching for data", details: error.message });
   }
 };
-
 
 const AllDataSearchController = async (req, res) => {
   try {
@@ -496,7 +496,13 @@ const ReportDataController = async (req, res) => {
       createdAt: { $gte: start, $lte: end },
     }).populate("ward");
 
-    res.json({ data });
+    if (data.length > 0) {
+      res.json({data});
+    } else {
+      res.status(400).send({
+        message: "Data Not Found Try Other Date Range",
+      });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).send({
