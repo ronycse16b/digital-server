@@ -1,16 +1,13 @@
-const mongoose = require("mongoose");
+// database connection file to MongoDB
+import { mongoose } from 'mongoose'
 
-const databaseConnect = async () => {
+const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(
-      "mongodb+srv://digital-union-database:LkMOOiAmc6hntQNI@cluster0.hj4avpy.mongodb.net/digital-union-database"
-    );
-    if (conn.connection.host) {
-      console.log("Database connection successfully established");
-    }
-  } catch (error) {
-    console.log(error.message);
-  }
-};
+    await mongoose.connect(process.env.MONGO_URI);
+     console.log("Connected to database");
+ } catch (error) {
+     console.log(error.message);
+ }
+}
 
-module.exports =  databaseConnect;
+export default connectDB

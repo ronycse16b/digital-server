@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const wardDataSchema = new mongoose.Schema(
   {
@@ -83,6 +83,7 @@ const wardDataSchema = new mongoose.Schema(
       ref: "wards", // Referencing the 'wards' collection
       required: true,
     },
+    payment:[],
     yearMullayon: {
       type: Number,
       
@@ -101,4 +102,4 @@ const wardDataSchema = new mongoose.Schema(
 );
 
 const WardDataModel = mongoose.model("ward-data", wardDataSchema);
-module.exports = WardDataModel;
+export default WardDataModel;

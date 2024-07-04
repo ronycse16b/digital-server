@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const wardSchema = new mongoose.Schema(
   {
@@ -14,4 +14,4 @@ const wardSchema = new mongoose.Schema(
 );
 
 const WardModel = mongoose.model("wards", wardSchema);
-module.exports =  WardModel;
+export default  WardModel;

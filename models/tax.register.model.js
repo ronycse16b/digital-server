@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const taxSchema = new mongoose.Schema(
   {
@@ -16,15 +16,15 @@ const taxSchema = new mongoose.Schema(
     },
     fatherName: {
       type: String,
-      required: true,
+      
     },
     motherName: {
       type: String,
-      required: true,
+      
     },
     villageName: {
       type: String,
-      required: true,
+      
     },
     cor: {
       type: Number,
@@ -33,6 +33,7 @@ const taxSchema = new mongoose.Schema(
       type: Number,
     },
     year: [],
+    amount: [],
 
     houseName: {
       type: String,
@@ -58,13 +59,11 @@ const taxSchema = new mongoose.Schema(
       type: Number,
     },
     ward: {
-      type: String,
+      type: Number,
       required: true,
     },
     user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "user", // Replace 'User' with the actual name of your user model
-      required: true,
+     type:String
     },
   },
   {
@@ -74,4 +73,4 @@ const taxSchema = new mongoose.Schema(
 
 const TaxModel = mongoose.model("tax-pay", taxSchema);
 
-module.exports = TaxModel;
+export default TaxModel;
